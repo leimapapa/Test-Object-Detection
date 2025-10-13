@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>YOLOv8 Object Detector</title>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --light-bg: #f3f4f6;
+            --light-card-bg: #ffffff;
+            --light-accent-primary: #4f46e5;
+            --light-accent-secondary: #8b5cf6;
+            --light-text-color: #1f2937;
+            --light-border-color: #e5e7eb;
+            --light-upload-text: #6b7280;
+            --light-message-info-bg: #e0f2fe;
+            --light-message-info-color: #2563eb;
+            --light-message-info-border: #3b82f6;
+            --light-message-error-bg: #fee2e2;
+            --light-message-error-color: #dc2626;
+            --light-message-error-border: #ef4444;
+            --light-message-success-bg: #dcfce7;
+            --light-message-success-color: #16a34a;
+            --light-message-success-border: #22c55e;
+            --light-sidebar-bg: rgba(255, 255, 255, 0.85);
+            --light-prediction-item-bg: #f9fafb;
+        }
+
+        .dark {
+            --bg: #1f2937;
+            --card-bg: #374151;
+            --accent-primary: #6366f1;
+            --accent-secondary: #a78bfa;
+            --text-color: #d1d5db;
+            --border-color: #4b5563;
+            --upload-text: #e0e0e0;
+            --message-info-bg: #1e3a8a;
+            --message-info-color: #93c5fd;
+            --message-info-border: #3b82f6;
+            --message-error-bg: #7f1d1d;
+            --message-error-color: #fca5a5;
+            --message-error-border: #ef4444;
+            --message-success-bg: #166534;
+            --message-success-color: #a7f3d0;
+            --message-success-border: #22c55e;
+            --sidebar-bg: rgba(55, 65, 81, 0.9);
+            --prediction-item-bg: #4b5563;
+        }
+
+        html:not(.dark) {
+            --bg: var(--light-bg);
+            --card-bg: var(--light-card-bg);
+            --accent-primary: var(--light-accent-primary);
+            --accent-secondary: var(--light-accent-secondary);
+            --text-color: var(--light-text-color);
+            --border-color: var(--light-border-color);
+            --upload-text: var(--light-upload-text);
+            --message-info-bg: var(--light-message-info-bg);
+            --message-info-color: var(--light-message-info-color);
+            --message-info-border: var(--light-message-info-border);
+            --message-error-bg: var(--light-message-error-bg);
+            --message-error-color: var(--light-message-error-color);
+            --message-error-border: var(--light-message-error-border);
+            --message-success-bg: var(--light-message-success-bg);
+            --message-success-color: var(--light-message-success-color);
+            --message-success-border: var(--light-message-success-border);
+            --sidebar-bg: var(--light-sidebar-bg);
+            --prediction-item-bg: var(--light-prediction-item-bg);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0.5rem;
+            overflow-x: hidden;
+            touch-action: pan-y;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 960px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+            position: relative;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .toggle-bar {
+            display: flex;
+            width: 100%;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            background-color: var(--border-color);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            color: var(--text-color);
+            background: transparent;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .toggle-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--accent-primary);
+            border-radius: 0.75rem;
+            z-index: -1;
+            transform: scaleX(0);
+            transition: transform 0.3s ease-in-out;
+            transform-origin: left center;
+        }
+
+        .toggle-btn.active {
+            color: white;
+        }
+
+        .toggle-btn.active::before {
+            transform: scaleX(1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        #uploadArea, #webcamArea {
+            width: 100%;
+            min-height: 200px;
+            max-height: 60vh;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.75rem;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            color: var(--upload-text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-primary);
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+        .dark .upload-area:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-area.dragover {
+            background-color: rgba(79, 70, 229, 0.15);
+            border-color: var(--accent-primary);
+        }
+        .dark .upload-area.dragover {
+            background-color: rgba(99, 102, 241, 0.25);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .video-container {
+            width: 100%;
+            height: 60vh;
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            touch-action: pinch-zoom;
+        }
+
+        video, #imagePreview, #overlayCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 0.75rem;
+        }
+
+        #overlayCanvas {
+            z-index: 5;
+        }
+
+        .button-overlay {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .button-overlay:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        #cameraToggleButton {
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 2.8rem;
+            height: 2.8rem;
+            font-size: 1.25rem;
+        }
+
+        #takePhotoButton {
+            bottom: 0.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4.5rem;
+            height: 4.5rem;
+            font-size: 1.75rem;
+            background-color: var(--accent-primary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        #takePhotoButton.stop-continuous {
+            background-color: #ef4444;
+        }
+        #takePhotoButton.stop-continuous:hover {
+            background-color: #dc2626;
+        }
+
+        .zoom-controls {
+            width: 100%;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 0.6rem;
+            background: var(--border-color);
+            border-radius: 0.5rem;
+            outline: none;
+            opacity: 0.8;
+            transition: opacity .2s;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            cursor: grab;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--card-bg);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+            color: var(--text-color);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 4px solid rgba(0, 0, 0, .2);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #messageBox {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+            width: 100%;
+            margin-top: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #messageBox.error {
+            background-color: var(--message-error-bg);
+            color: var(--message-error-color);
+            border: 1px solid var(--message-error-border);
+        }
+
+        #messageBox.success {
+            background-color: var(--message-success-bg);
+            color: var(--message-success-color);
+            border: 1px solid var(--message-success-border);
+        }
+
+        #messageBox.info {
+            background-color: var(--message-info-bg);
+            color: var(--message-info-color);
+            border: 1px solid var(--message-info-border);
+        }
+
+        #predictionsSidebar {
+            position: fixed;
+            top: 0;
+            right: -100vw;
+            width: 100vw;
+            max-width: 350px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(8px);
+            box-shadow: -4px 0 10px rgba(0, 0, 0, 0.2);
+            transition: right 0.3s ease-in-out;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            color: var(--text-color);
+        }
+
+        #predictionsSidebar.open {
+            right: 0;
+        }
+
+        .predictions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .predictions-header h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .predictions-header button {
+            background: none;
+            border: none;
+            font-size: 1.75rem;
+            cursor: pointer;
+            color: var(--text-color);
+            padding: 0.25rem;
+            border-radius: 50%;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .predictions-header button:hover {
+            background-color: var(--border-color);
+            color: var(--accent-primary);
+        }
+
+        .predictions-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .predictions-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .predictions-content::-webkit-scrollbar-track {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+        .predictions-content::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 10px;
+        }
+        .predictions-content::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-secondary);
+        }
+
+        .prediction-item {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--prediction-item-bg);
+            margin-bottom: 0.75rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .prediction-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .prediction-item span:first-child {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--accent-primary);
+            font-size: 1.1rem;
+        }
+
+        .prediction-details {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.9rem;
+        }
+
+        .mini-predictions-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background-color: var(--sidebar-bg);
+            backdrop-filter: blur(8px);
+            border-radius: 9999px;
+            padding: 0.6rem 1.2rem;
+            display: flex;
+            align-items: center;
+            color: var(--text-color);
+            gap: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 90;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+
+        .mini-predictions-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+
+        .mini-predictions-container #openPredictionsButton {
+            background-color: var(--accent-primary);
+            color: white;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1.1rem;
+            transition: background-color 0.2s, transform 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .mini-predictions-container #openPredictionsButton:hover {
+            background-color: var(--accent-secondary);
+            transform: scale(1.05);
+        }
+
+        #livePredictionDisplay {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease-in-out;
+            text-align: center;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            background-color: var(--message-info-bg);
+            color: var(--message-info-color);
+            font-weight: 600;
+            width: 100%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            border: 1px solid var(--message-info-border);
+        }
+        .dark #livePredictionDisplay {
+            background-color: var(--message-info-bg);
+            color: var(--message-info-color);
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .main-container {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-start;
+                padding: 1.5rem;
+            }
+
+            .main-content {
+                flex: 1;
+                max-width: calc(100% - 350px - 2rem);
+                margin-right: 2rem;
+            }
+
+            .video-container {
+                height: 50vh;
+                aspect-ratio: 16 / 9;
+                min-height: 400px;
+            }
+
+            #predictionsSidebar {
+                position: static;
+                width: 350px;
+                height: auto;
+                min-height: 500px;
+                box-shadow: none;
+                border-left: 1px solid var(--border-color);
+                border-radius: 0;
+                right: auto;
+                transition: none;
+                background: var(--card-bg);
+                backdrop-filter: none;
+            }
+
+            #predictionsSidebar .predictions-header button {
+                display: none;
+            }
+            .mini-predictions-container {
+                display: none !important;
+            }
+            #miniPredictionText {
+                color: var(--text-color);
+                user-select: none;
+                pointer-events: none;
+            }
+            #initialMessage {
+                display: none;
+            }
+            #livePredictionDisplay {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="main-content flex flex-col items-center w-full">
+            <h3 class="font-extrabold mb-2 text-center text-gray-800 dark:text-white text-2xl">YOLOv8 Object Detector</h3>
+            <p id="initialMessage" class="text-sm text-gray-600 dark:text-gray-200 mb-4 text-center">Choose an input source to detect objects!</p>
+            <div id="livePredictionDisplay" class="hidden"></div>
+
+            <div class="toggle-bar mb-6">
+                <button id="uploadToggle" class="toggle-btn active"><i class="fas fa-cloud-upload-alt mr-2"></i> Upload</button>
+                <button id="webcamToggle" class="toggle-btn"><i class="fas fa-video mr-2"></i> Webcam</button>
+            </div>
+
+            <div id="uploadArea" class="upload-area w-full mb-6">
+                <i class="fas fa-file-upload text-4xl mb-3"></i>
+                Drop an image here or click to browse
+                <input type="file" id="fileInput" accept="image/*" />
+            </div>
+
+            <div id="uploadedImagePreviewContainer" class="hidden w-full min-h-[250px] max-h-[60vh] overflow-hidden rounded-lg mb-6 bg-gray-100 dark:bg-gray-700 flex items-center justify-center p-2 border border-gray-200 dark:border-gray-600 relative">
+                <img id="uploadedImageDisplay" class="max-w-full max-h-full object-contain" alt="Uploaded Image Preview" />
+                <canvas id="overlayCanvas" class="absolute"></canvas>
+            </div>
+
+            <div id="webcamArea" class="w-full">
+                <div id="videoContainer" class="video-container">
+                    <video id="cameraFeed" autoplay playsinline></video>
+                    <img id="imagePreview" alt="Captured Frame" style="display:none;" />
+                    <canvas id="overlayCanvas" class="absolute"></canvas>
+                    <canvas id="overlayCanvas" class="absolute"></canvas>
+                    <p id="noCameraMessage" class="absolute text-white text-center p-4 hidden bg-black bg-opacity-70 rounded-md">
+                        Camera not available or access denied. Please allow camera permissions.
+                    </p>
+                    <button id="cameraToggleButton" class="button-overlay hidden">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button id="takePhotoButton" class="button-overlay">
+                        <i class="fas fa-play"></i>
+                    </button>
+                </div>
+
+                <div id="zoomControls" class="zoom-controls hidden mt-4">
+                    <label for="zoomSlider" class="text-base font-medium mb-2 text-gray-700 dark:text-gray-200">Zoom Level: <span id="zoomValue">1.0</span>x</label>
+                    <input type="range" id="zoomSlider" min="1.0" max="4.0" value="1.0" step="0.1">
+                </div>
+            </div>
+
+            <div id="loading" class="hidden flex flex-col items-center mt-4">
+                <div class="spinner"></div>
+                <p class="text-gray-700 dark:text-gray-200 text-sm">Processing...</p>
+            </div>
+
+            <div id="messageBox" class="message-box hidden"></div>
+        </div>
+
+        <div id="predictionsSidebar" class="predictions-sidebar">
+            <div class="predictions-header">
+                <h3>Detections</h3>
+                <button id="closePredictions">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="predictionsContent" class="predictions-content">
+                <p class="text-gray-500 dark:text-gray-200 text-sm mt-2">Upload an image or start your webcam to see detections!</p>
+            </div>
+        </div>
+
+        <div id="miniPredictions" class="mini-predictions-container hidden">
+            <span id="miniPredictionText" class="text-sm font-semibold"></span>
+            <button id="openPredictionsButton">
+                <i class="fas fa-chart-bar"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const MODEL_CONFIG = {"classes": ["F1", "F1 Stick Grenade", "HOSAM-1", "Incendiary", "M18"], "img_size": 640, "conf_thres": 0.25, "iou_thres": 0.45};
+        const MODEL_INPUT_NAME = 'images';  // YOLOv8 ONNX input name
+        let session = null;
+        let webcamStream = null;
+        let liveInterval = null;
+        let continuousPredictionActive = false;
+        let isSidebarManuallyClosed = false;
+
+        const $ = id => document.getElementById(id);
+
+        // UI Element References
+        const cameraFeed = $('cameraFeed');
+        const imagePreview = $('imagePreview');
+        const uploadedImageDisplay = $('uploadedImageDisplay');
+        const uploadedImagePreviewContainer = $('uploadedImagePreviewContainer');
+        const overlayCanvas = $('overlayCanvas');
+        const zoomSlider = $('zoomSlider');
+        const zoomValueSpan = $('zoomValue');
+        const noCameraMessage = $('noCameraMessage');
+        const messageBox = $('messageBox');
+        const videoContainer = $('videoContainer');
+        const cameraToggleButton = $('cameraToggleButton');
+        const takePhotoButton = $('takePhotoButton');
+        const uploadToggle = $('uploadToggle');
+        const webcamToggle = $('webcamToggle');
+        const uploadArea = $('uploadArea');
+        const fileInput = $('fileInput');
+        const loadingSpinner = $('loading');
+        const predictionsSidebar = $('predictionsSidebar');
+        const predictionsContent = $('predictionsContent');
+        const closePredictionsButton = $('closePredictions');
+        const zoomControls = $('zoomControls');
+        const miniPredictions = $('miniPredictions');
+        const miniPredictionText = $('miniPredictionText');
+        const openPredictionsButton = $('openPredictionsButton');
+        const initialMessage = $('initialMessage');
+        const livePredictionDisplay = $('livePredictionDisplay');
+
+        let currentZoom = 1.0;
+        const MIN_ZOOM = 1.0;
+        const MAX_ZOOM = 4.0;
+        let isFrontCamera = false;
+
+        let initialPinchDistance = -1;
+        let lastZoom = MIN_ZOOM;
+
+        function isMobileDevice() {
+            return (
+                /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                (navigator.maxTouchPoints > 0 && navigator.userAgent.includes("Mobi"))
+            );
+        }
+
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`;
+            messageBox.style.display = 'block';
+            setTimeout(() => messageBox.style.display = 'none', 4000);
+        }
+
+        function applyZoom(zoomLevel) {
+            currentZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomLevel));
+            cameraFeed.style.transform = `scale(${currentZoom})`;
+            zoomSlider.value = currentZoom.toFixed(1);
+            zoomValueSpan.textContent = currentZoom.toFixed(1);
+        }
+
+        function showPredictionsSidebar(force = false) {
+            if (!isSidebarManuallyClosed || force) {
+                predictionsSidebar.classList.add('open');
+                miniPredictions.classList.add('hidden');
+            }
+            updateClosedSidebarDisplay();
+        }
+
+        function hidePredictionsSidebar() {
+            predictionsSidebar.classList.remove('open');
+            isSidebarManuallyClosed = true;
+            updateClosedSidebarDisplay();
+        }
+
+        function updateClosedSidebarDisplay() {
+            if (!predictionsSidebar.classList.contains('open') && predictionsContent.children.length > 0 && isMobileDevice()) {
+                miniPredictions.classList.remove('hidden');
+                livePredictionDisplay.classList.add('hidden');
+            } else {
+                miniPredictions.classList.add('hidden');
+                livePredictionDisplay.classList.remove('hidden');
+            }
+
+            if (continuousPredictionActive && !predictionsSidebar.classList.contains('open') && isMobileDevice()) {
+                livePredictionDisplay.classList.add('hidden');
+                initialMessage.classList.add('hidden');
+            } else {
+                livePredictionDisplay.classList.remove('hidden');
+                if (!continuousPredictionActive && (!webcamStream || !predictionsContent.children.length || !isMobileDevice())) {
+                    initialMessage.classList.remove('hidden');
+                } else if (isMobileDevice() && webcamStream && !continuousPredictionActive) {
+                    initialMessage.classList.add('hidden');
+                } else {
+                    initialMessage.classList.add('hidden');
+                }
+            }
+        }
+
+        async function initModel() {
+            try {
+                session = await ort.InferenceSession.create('./best.onnx', {
+                    executionProviders: ['wasm']
+                });
+                showMessage('Model ready!', 'success');
+            } catch (e) {
+                showMessage('Model error: ' + e.message, 'error');
+            }
+        }
+
+        function preprocess(src) {
+            const { img_size } = MODEL_CONFIG;
+            const canvas = document.createElement('canvas');
+            canvas.width = img_size;
+            canvas.height = img_size;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(src, 0, 0, img_size, img_size);
+            const imageData = ctx.getImageData(0, 0, img_size, img_size).data;
+            const floatData = new Float32Array(3 * img_size * img_size);
+            for (let i = 0; i < img_size * img_size; i++) {
+                floatData[i] = imageData[i * 4] / 255.0; // R
+                floatData[img_size * img_size + i] = imageData[i * 4 + 1] / 255.0; // G
+                floatData[2 * img_size * img_size + i] = imageData[i * 4 + 2] / 255.0; // B
+            }
+            return floatData;
+        }
+
+        function nonMaxSuppression(boxes, scores, iouThreshold) {
+            const indices = [];
+            const sortedIndices = scores
+                .map((score, index) => ({ score, index }))
+                .sort((a, b) => b.score - a.score)
+                .map(item => item.index);
+
+            // Corrected NMS loop
+            while (sortedIndices.length > 0) {
+                const current = sortedIndices.shift();
+                indices.push(current);
+                const currentBox = boxes[current];
+                
+                // Filter out boxes with high IOU
+                const remainingIndices = [];
+                for (const idx of sortedIndices) {
+                    const box = boxes[idx];
+                    const iou = calculateIoU(currentBox, box);
+                    if (iou <= iouThreshold) {
+                        remainingIndices.push(idx);
+                    }
+                }
+                // Overwrite the sortedIndices array with the remaining ones
+                sortedIndices.splice(0, sortedIndices.length, ...remainingIndices);
+            }
+            return indices;
+        }
+
+        function calculateIoU(box1, box2) {
+            const [x1, y1, w1, h1] = box1;
+            const [x2, y2, w2, h2] = box2;
+            const x1_min = x1 - w1 / 2;
+            const x1_max = x1 + w1 / 2;
+            const y1_min = y1 - h1 / 2;
+            const y1_max = y1 + h1 / 2;
+            const x2_min = x2 - w2 / 2;
+            const x2_max = x2 + w2 / 2;
+            const y2_min = y2 - h2 / 2;
+            const y2_max = y2 + h2 / 2;
+
+            const xi1 = Math.max(x1_min, x2_min);
+            const xi2 = Math.min(x1_max, x2_max);
+            const yi1 = Math.max(y1_min, y2_min);
+            const yi2 = Math.min(y1_max, y2_max);
+
+            const interArea = Math.max(0, xi2 - xi1) * Math.max(0, yi2 - yi1);
+            const box1Area = w1 * h1;
+            const box2Area = w2 * h2;
+            return interArea / (box1Area + box2Area - interArea);
+        }
+
+        async function predict(src, forceSidebarOpen = true) {
+            if (!session) {
+                showMessage('Model not ready', 'info');
+                return;
+            }
+            loadingSpinner.style.display = 'flex';
+
+            try {
+                const { img_size, conf_thres, iou_thres, classes } = MODEL_CONFIG;
+                const data = preprocess(src);
+                const tensor = new ort.Tensor('float32', data, [1, 3, img_size, img_size]);
+                const outMap = await session.run({ [MODEL_INPUT_NAME]: tensor });
+                
+                // --- FIX: Correctly parse the YOLOv8 ONNX output tensor ---
+                const outputTensor = outMap[Object.keys(outMap)[0]];
+                const output = Array.from(outputTensor.data);
+                const dims = outputTensor.dims;
+
+                // Expected shape is [1, 4 + num_classes, num_detections]
+                if (dims.length !== 3 || dims[1] !== (4 + classes.length)) {
+                    throw new Error(`Unexpected ONNX output shape: [${dims}] - Expected [1, ${4 + classes.length}, N]`);
+                }
+
+                const num_features = dims[1]; // 4 + classes.length (e.g., 4 + 5 = 9)
+                const num_detections = dims[2]; // Total number of anchor boxes/predictions
+
+                const boxes = [];
+                const scores = [];
+                const classIds = [];
+
+                const COORD_COUNT = 4; // x, y, w, h
+                const CLASS_SCORE_START_INDEX = 4; // Index where class scores begin
+
+                for (let i = 0; i < num_detections; i++) {
+                    let maxClassScore = 0;
+                    let classId = -1;
+
+                    // 1. Find the highest class score for detection 'i'
+                    for (let j = 0; j < classes.length; j++) {
+                        // Formula: (feature_index * num_detections) + detection_index
+                        const currentScoreIndex = (CLASS_SCORE_START_INDEX + j) * num_detections + i;
+                        const currentScore = output[currentScoreIndex];
+
+                        if (currentScore > maxClassScore) {
+                            maxClassScore = currentScore;
+                            classId = j;
+                        }
+                    }
+
+                    // 2. Apply confidence threshold
+                    if (maxClassScore >= conf_thres) {
+                        // 3. Get the bounding box coordinates (x, y, w, h) for detection 'i'
+                        const x = output[0 * num_detections + i]; 
+                        const y = output[1 * num_detections + i]; 
+                        const w = output[2 * num_detections + i]; 
+                        const h = output[3 * num_detections + i]; 
+
+                        boxes.push([x, y, w, h]);
+                        scores.push(maxClassScore);
+                        classIds.push(classId);
+                    }
+                }
+                // --- END FIX ---
+
+
+                // Apply NMS
+                const indices = nonMaxSuppression(boxes, scores, iou_thres);
+                const results = indices.map(idx => ({
+                    class: classes[classIds[idx]],
+                    confidence: scores[idx],
+                    box: boxes[idx]
+                }));
+
+                displayResults(results, src);
+                showPredictionsSidebar(forceSidebarOpen);
+            } catch (e) {
+                showMessage('Prediction failed: ' + e.message, 'error');
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        function displayResults(results, src) {
+            predictionsContent.innerHTML = '';
+            const canvas = overlayCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Use the image/video's true dimensions for the canvas to maintain aspect ratio for drawing
+            const displayWidth = src.naturalWidth || src.videoWidth || src.width;
+            const displayHeight = src.naturalHeight || src.videoHeight || src.height;
+            canvas.width = displayWidth;
+            canvas.height = displayHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Scaling factors to map 640x640 model output to display size
+            const scaleX = canvas.width / 640;
+            const scaleY = canvas.height / 640;
+
+            results.forEach((r, i) => {
+                const [x_center, y_center, w, h] = r.box;
+                
+                // Scale coordinates
+                const scaledW = w * scaleX;
+                const scaledH = h * scaleY;
+                const scaledX_center = x_center * scaleX;
+                const scaledY_center = y_center * scaleY;
+
+                // Calculate top-left corner
+                const x_min = scaledX_center - scaledW / 2;
+                const y_min = scaledY_center - scaledH / 2;
+
+                // Draw bounding box
+                ctx.strokeStyle = 'lime';
+                ctx.lineWidth = 12;
+                ctx.strokeRect(x_min, y_min, scaledW, scaledH);
+                
+                // Draw label
+                ctx.fillStyle = 'lime';
+                ctx.font = '150px Inter';
+                // Confidence score is already a float between 0 and 1 (from the fix)
+                const label = `${r.class} (${(r.confidence * 100).toFixed(1)}%)`; 
+                ctx.fillText(label, x_min, y_min > 50 ? y_min - 5 : y_min + 20);
+
+                // Sidebar item
+                const predictionItem = document.createElement('div');
+                predictionItem.className = 'prediction-item';
+
+                const classNameSpan = document.createElement('span');
+                classNameSpan.textContent = label;
+
+                const predictionDetailsDiv = document.createElement('div');
+                predictionDetailsDiv.className = 'prediction-details';
+                predictionDetailsDiv.innerHTML = `Box: [x: ${x_center.toFixed(1)}, y: ${y_center.toFixed(1)}, w: ${w.toFixed(1)}, h: ${h.toFixed(1)}]`;
+
+                predictionItem.appendChild(classNameSpan);
+                predictionItem.appendChild(predictionDetailsDiv);
+                predictionsContent.appendChild(predictionItem);
+            });
+
+            const topPrediction = results[0];
+            if (topPrediction) {
+                const label = `${topPrediction.class} (${(topPrediction.confidence * 100).toFixed(1)}%)`;
+                miniPredictionText.textContent = label;
+                livePredictionDisplay.textContent = label;
+            } else {
+                miniPredictionText.textContent = 'No detections';
+                livePredictionDisplay.textContent = 'No detections';
+            }
+            updateClosedSidebarDisplay();
+        }
+
+        async function startWebcam() {
+            if (webcamStream) {
+                stopWebcam();
+            }
+            takePhotoButton.disabled = true;
+            const videoConstraints = {
+                facingMode: isFrontCamera ? 'user' : 'environment'
+            };
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+                cameraFeed.srcObject = webcamStream;
+                cameraFeed.style.display = 'block';
+                imagePreview.style.display = 'none';
+                noCameraMessage.classList.add('hidden');
+                cameraToggleButton.classList.remove('hidden');
+                applyZoom(MIN_ZOOM);
+                zoomControls.classList.remove('hidden');
+                const cameraName = isFrontCamera ? 'Front Camera' : 'Back Camera';
+                showMessage(`${cameraName} started! Continuous detection active.`, 'success');
+                isSidebarManuallyClosed = false;
+                startContinuousPrediction();
+                initialMessage.classList.add('hidden');
+            } catch (err) {
+                console.error('Error accessing camera: ', err);
+                cameraFeed.style.display = 'none';
+                imagePreview.style.display = 'none';
+                noCameraMessage.classList.remove('hidden');
+                let errorMessage = 'Failed to start camera. ';
+                if (err.name === 'NotAllowedError') {
+                    errorMessage += 'Permission denied by user.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage += 'No camera found.';
+                } else if (err.name === 'OverconstrainedError') {
+                    errorMessage += 'The requested camera is not available. Try toggling.';
+                } else {
+                    errorMessage += 'Please ensure camera permissions are granted.';
+                }
+                showMessage(errorMessage, 'error');
+                cameraToggleButton.classList.add('hidden');
+                zoomControls.classList.add('hidden');
+                stopContinuousPrediction();
+                hidePredictionsSidebar();
+                initialMessage.classList.remove('hidden');
+            } finally {
+                takePhotoButton.disabled = false;
+            }
+        }
+
+        function stopWebcam() {
+            stopContinuousPrediction();
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+            cameraFeed.srcObject = null;
+            cameraFeed.style.display = 'none';
+            imagePreview.style.display = 'none';
+            overlayCanvas.getContext('2d').clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            noCameraMessage.classList.remove('hidden');
+            noCameraMessage.textContent = 'Camera stopped. Press the Play button to start.';
+            cameraToggleButton.classList.add('hidden');
+            zoomControls.classList.add('hidden');
+            applyZoom(MIN_ZOOM);
+            hidePredictionsSidebar();
+            isSidebarManuallyClosed = false;
+            takePhotoButton.innerHTML = '<i class="fas fa-play"></i>';
+            takePhotoButton.classList.remove('stop-continuous');
+            showMessage('Camera stopped.', 'info');
+            initialMessage.classList.remove('hidden');
+        }
+
+        async function switchCamera() {
+            isFrontCamera = !isFrontCamera;
+            await startWebcam();
+        }
+
+        function captureFrameForPrediction() {
+            const v = cameraFeed;
+            if (!v.videoWidth || !v.videoHeight) {
+                showMessage('Video stream not ready for capture.', 'error');
+                return;
+            }
+            const cvs = document.createElement('canvas');
+            cvs.width = v.videoWidth;
+            cvs.height = v.videoHeight;
+            const sx = (v.videoWidth - (v.videoWidth / currentZoom)) / 2;
+            const sy = (v.videoHeight - (v.videoHeight / currentZoom)) / 2;
+            const sWidth = v.videoWidth / currentZoom;
+            const sHeight = v.videoHeight / currentZoom;
+            cvs.getContext('2d').drawImage(v, sx, sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
+            const imgForPrediction = new Image();
+            imgForPrediction.onload = () => {
+                imagePreview.src = imgForPrediction.src;
+                imagePreview.style.display = 'block';
+                cameraFeed.style.display = 'none';
+                isSidebarManuallyClosed = false;
+                predict(imgForPrediction, true);
+                showMessage('Photo captured! Displaying detections.', 'info');
+            };
+            imgForPrediction.src = cvs.toDataURL('image/jpeg');
+        }
+
+        function startContinuousPrediction() {
+            if (liveInterval) clearInterval(liveInterval);
+            liveInterval = setInterval(() => {
+                if (cameraFeed.readyState === cameraFeed.HAVE_ENOUGH_DATA) {
+                    const cvs = document.createElement('canvas');
+                    cvs.width = cameraFeed.videoWidth;
+                    cvs.height = cameraFeed.videoHeight;
+                    const sx = (cameraFeed.videoWidth - (cameraFeed.videoWidth / currentZoom)) / 2;
+                    const sy = (cameraFeed.videoHeight - (cameraFeed.videoHeight / currentZoom)) / 2;
+                    const sWidth = cameraFeed.videoWidth / currentZoom;
+                    const sHeight = cameraFeed.videoHeight / currentZoom;
+                    cvs.getContext('2d').drawImage(cameraFeed, sx, sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
+                    const img = new Image();
+                    img.onload = () => predict(img, false);
+                    img.src = cvs.toDataURL('image/jpeg');
+                }
+            }, 100);
+            continuousPredictionActive = true;
+            cameraFeed.style.display = 'block';
+            imagePreview.style.display = 'none';
+            takePhotoButton.innerHTML = '<i class="fas fa-pause"></i>';
+            takePhotoButton.classList.add('stop-continuous');
+            showMessage('Continuous detection started.', 'success');
+            livePredictionDisplay.classList.remove('hidden');
+            initialMessage.classList.add('hidden');
+        }
+
+        function stopContinuousPrediction() {
+            if (liveInterval) {
+                clearInterval(liveInterval);
+                liveInterval = null;
+            }
+            continuousPredictionActive = false;
+            if (webcamStream) {
+                // If the stream is still active, show the 'capture photo' button
+                takePhotoButton.innerHTML = '<i class="fas fa-camera"></i>';
+                takePhotoButton.classList.remove('stop-continuous');
+            }
+            showMessage('Continuous detection paused.', 'info');
+            livePredictionDisplay.classList.add('hidden');
+            updateClosedSidebarDisplay();
+        }
+
+        function setMode(mode) {
+            uploadToggle.classList.remove('active');
+            webcamToggle.classList.remove('active');
+            uploadArea.style.display = 'none';
+            // webcamArea needs to be block for video elements to work correctly
+            webcamArea.style.display = 'none'; 
+            imagePreview.style.display = 'none';
+            uploadedImagePreviewContainer.classList.add('hidden');
+            overlayCanvas.getContext('2d').clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            hidePredictionsSidebar();
+            isSidebarManuallyClosed = false;
+            livePredictionDisplay.classList.add('hidden');
+            initialMessage.classList.remove('hidden');
+
+            if (mode === 'upload') {
+                uploadToggle.classList.add('active');
+                uploadArea.style.display = 'flex';
+                stopWebcam();
+            } else {
+                webcamToggle.classList.add('active');
+                webcamArea.style.display = 'block';
+                startWebcam();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Ensure dark mode is set by default (as per the original file)
+            document.documentElement.classList.add('dark'); 
+            initModel();
+            uploadToggle.addEventListener('click', () => setMode('upload'));
+            webcamToggle.addEventListener('click', () => setMode('webcam'));
+            uploadArea.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+            ['dragover', 'dragleave', 'drop'].forEach(evt => {
+                uploadArea.addEventListener(evt, e => {
+                    e.preventDefault();
+                    uploadArea.classList.toggle('dragover', evt === 'dragover');
+                    if (evt === 'drop' && e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+                });
+            });
+            cameraToggleButton.addEventListener('click', switchCamera);
+            takePhotoButton.addEventListener('click', () => {
+                if (!webcamStream) {
+                    // Start camera if it's not running
+                    startWebcam();
+                } else {
+                    if (continuousPredictionActive) {
+                        // Pause continuous detection and capture a frame
+                        stopContinuousPrediction();
+                        captureFrameForPrediction();
+                    } else {
+                        // Start continuous detection (if currently paused/stopped after starting camera)
+                        startContinuousPrediction();
+                        hidePredictionsSidebar();
+                    }
+                }
+            });
+            zoomSlider.addEventListener('input', (event) => {
+                const zoomLevel = parseFloat(event.target.value);
+                applyZoom(zoomLevel);
+            });
+            if (isMobileDevice()) {
+                videoContainer.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 2) {
+                        initialPinchDistance = Math.hypot(
+                            e.touches[0].clientX - e.touches[1].clientX,
+                            e.touches[0].clientY - e.touches[1].clientY
+                        );
+                        lastZoom = currentZoom;
+                        e.preventDefault();
+                    }
+                });
+                videoContainer.addEventListener('touchmove', (e) => {
+                    if (e.touches.length === 2 && initialPinchDistance > 0) {
+                        const currentPinchDistance = Math.hypot(
+                            e.touches[0].clientX - e.touches[1].clientX,
+                            e.touches[0].clientY - e.touches[1].clientY
+                        );
+                        const scaleFactor = currentPinchDistance / initialPinchDistance;
+                        let newZoom = lastZoom * scaleFactor;
+                        applyZoom(newZoom);
+                        e.preventDefault();
+                    }
+                });
+                videoContainer.addEventListener('touchend', () => {
+                    initialPinchDistance = -1;
+                });
+                videoContainer.addEventListener('touchcancel', () => {
+                    initialPinchDistance = -1;
+                });
+            }
+            closePredictionsButton.addEventListener('click', hidePredictionsSidebar);
+            openPredictionsButton.addEventListener('click', () => {
+                isSidebarManuallyClosed = false;
+                showPredictionsSidebar(true);
+            });
+            setMode('upload');
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showMessage('Please choose an image file (e.g., JPG, PNG).', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    uploadedImageDisplay.src = e.target.result;
+                    uploadedImagePreviewContainer.classList.remove('hidden');
+                    imagePreview.style.display = 'none';
+                    cameraFeed.style.display = 'none';
+                    isSidebarManuallyClosed = false;
+                    predict(img, true);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
