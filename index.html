@@ -826,7 +826,7 @@
 
         async function initModel() {
             try {
-                session = await ort.InferenceSession.create('./best_medical_instruments.onnx', {
+                session = await ort.InferenceSession.create('./best.onnx', {
                     executionProviders: ['wasm']
                 });
                 showMessage('Model ready!', 'success');
@@ -1331,3 +1331,4 @@
 </body>
 
 </html>
+
