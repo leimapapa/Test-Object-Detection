@@ -114,7 +114,7 @@
             overflow: hidden;
             margin-bottom: 1rem;
             background-color: var(--border-color);
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .toggle-btn {
@@ -155,7 +155,8 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        #uploadArea, #webcamArea {
+        #uploadArea,
+        #webcamArea {
             width: 100%;
             min-height: 200px;
             max-height: 60vh;
@@ -184,6 +185,7 @@
             border-color: var(--accent-primary);
             background-color: rgba(79, 70, 229, 0.05);
         }
+
         .dark .upload-area:hover {
             background-color: rgba(99, 102, 241, 0.1);
         }
@@ -192,6 +194,7 @@
             background-color: rgba(79, 70, 229, 0.15);
             border-color: var(--accent-primary);
         }
+
         .dark .upload-area.dragover {
             background-color: rgba(99, 102, 241, 0.25);
         }
@@ -215,7 +218,11 @@
             touch-action: pinch-zoom;
         }
 
-        video, #imagePreview, #overlayCanvas {
+        video,
+        #imagePreview,
+        #overlayCanvas,
+        #overlaySVG,
+        #overlaySVGWebcam {
             position: absolute;
             top: 0;
             left: 0;
@@ -225,7 +232,9 @@
             border-radius: 0.75rem;
         }
 
-        #overlayCanvas {
+        #overlayCanvas,
+        #overlaySVG,
+        #overlaySVGWebcam {
             z-index: 5;
         }
 
@@ -265,12 +274,13 @@
             height: 4.5rem;
             font-size: 1.75rem;
             background-color: var(--accent-primary);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
         }
 
         #takePhotoButton.stop-continuous {
             background-color: #ef4444;
         }
+
         #takePhotoButton.stop-continuous:hover {
             background-color: #dc2626;
         }
@@ -292,7 +302,7 @@
             outline: none;
             opacity: 0.8;
             transition: opacity .2s;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         input[type="range"]::-webkit-slider-thumb {
@@ -307,6 +317,7 @@
             border: 2px solid var(--card-bg);
             transition: background-color 0.2s ease, transform 0.1s ease;
         }
+
         input[type="range"]::-webkit-slider-thumb:active {
             cursor: grabbing;
             transform: scale(1.1);
@@ -343,7 +354,7 @@
             display: none;
             width: 100%;
             margin-top: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         #messageBox.error {
@@ -426,14 +437,17 @@
         .predictions-content::-webkit-scrollbar {
             width: 8px;
         }
+
         .predictions-content::-webkit-scrollbar-track {
             background: var(--border-color);
             border-radius: 10px;
         }
+
         .predictions-content::-webkit-scrollbar-thumb {
             background: var(--accent-primary);
             border-radius: 10px;
         }
+
         .predictions-content::-webkit-scrollbar-thumb:hover {
             background: var(--accent-secondary);
         }
@@ -449,6 +463,7 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .prediction-item:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -479,7 +494,7 @@
             align-items: center;
             color: var(--text-color);
             gap: 0.75rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             z-index: 90;
             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
             cursor: pointer;
@@ -502,6 +517,7 @@
             transition: background-color 0.2s, transform 0.2s;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
+
         .mini-predictions-container #openPredictionsButton:hover {
             background-color: var(--accent-secondary);
             transform: scale(1.05);
@@ -520,10 +536,11 @@
             color: var(--message-info-color);
             font-weight: 600;
             width: 100%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             margin-bottom: 1rem;
             border: 1px solid var(--message-info-border);
         }
+
         .dark #livePredictionDisplay {
             background-color: var(--message-info-bg);
             color: var(--message-info-color);
@@ -533,6 +550,7 @@
             body {
                 padding: 1rem;
             }
+
             .main-container {
                 flex-direction: row;
                 justify-content: space-between;
@@ -569,17 +587,21 @@
             #predictionsSidebar .predictions-header button {
                 display: none;
             }
+
             .mini-predictions-container {
                 display: none !important;
             }
+
             #miniPredictionText {
                 color: var(--text-color);
                 user-select: none;
                 pointer-events: none;
             }
+
             #initialMessage {
                 display: none;
             }
+
             #livePredictionDisplay {
                 display: none !important;
             }
@@ -590,12 +612,15 @@
 <body>
     <div class="main-container">
         <div class="main-content flex flex-col items-center w-full">
-            <h3 class="font-extrabold mb-2 text-center text-gray-800 dark:text-white text-2xl">YOLOv8 Object Detector</h3>
-            <p id="initialMessage" class="text-sm text-gray-600 dark:text-gray-200 mb-4 text-center">Choose an input source to detect objects!</p>
+            <h3 class="font-extrabold mb-2 text-center text-gray-800 dark:text-white text-2xl">YOLOv8 Object Detector
+            </h3>
+            <p id="initialMessage" class="text-sm text-gray-600 dark:text-gray-200 mb-4 text-center">Choose an input
+                source to detect objects!</p>
             <div id="livePredictionDisplay" class="hidden"></div>
 
             <div class="toggle-bar mb-6">
-                <button id="uploadToggle" class="toggle-btn active"><i class="fas fa-cloud-upload-alt mr-2"></i> Upload</button>
+                <button id="uploadToggle" class="toggle-btn active"><i class="fas fa-cloud-upload-alt mr-2"></i>
+                    Upload</button>
                 <button id="webcamToggle" class="toggle-btn"><i class="fas fa-video mr-2"></i> Webcam</button>
             </div>
 
@@ -605,18 +630,46 @@
                 <input type="file" id="fileInput" accept="image/*" />
             </div>
 
-            <div id="uploadedImagePreviewContainer" class="hidden w-full min-h-[250px] max-h-[60vh] overflow-hidden rounded-lg mb-6 bg-gray-100 dark:bg-gray-700 flex items-center justify-center p-2 border border-gray-200 dark:border-gray-600 relative">
-                <img id="uploadedImageDisplay" class="max-w-full max-h-full object-contain" alt="Uploaded Image Preview" />
+            <div id="uploadedImagePreviewContainer"
+                class="hidden w-full min-h-[250px] max-h-[60vh] overflow-hidden rounded-lg mb-6 bg-gray-100 dark:bg-gray-700 flex items-center justify-center p-2 border border-gray-200 dark:border-gray-600 relative">
+                <img id="uploadedImageDisplay" class="max-w-full max-h-full object-contain"
+                    alt="Uploaded Image Preview" />
                 <canvas id="overlayCanvas" class="absolute"></canvas>
+                <svg id="overlaySVG" class="absolute">
+                    <defs>
+                        <linearGradient id="linearGrad" gradientTransform="rotate(90)">
+                            <stop offset="0%" stop-color="orange" />
+                            <stop offset="100%" stop-color="red" />
+                        </linearGradient>
+                        <linearGradient id="linearGrad2" gradientTransform="rotate(90)">
+                            <stop offset="0%" stop-color="red" />
+                            <stop offset="100%" stop-color="orange" />
+                        </linearGradient>
+                    </defs>
+                    <g class="boxesHere"></g>
+                </svg>
             </div>
 
             <div id="webcamArea" class="w-full">
                 <div id="videoContainer" class="video-container">
                     <video id="cameraFeed" autoplay playsinline></video>
                     <img id="imagePreview" alt="Captured Frame" style="display:none;" />
-                    <canvas id="overlayCanvas" class="absolute"></canvas>
-                    <canvas id="overlayCanvas" class="absolute"></canvas>
-                    <p id="noCameraMessage" class="absolute text-white text-center p-4 hidden bg-black bg-opacity-70 rounded-md">
+                    <canvas id="overlayCanvasWebcam" class="absolute"></canvas>
+                    <svg id="overlaySVGWebcam" class="absolute">
+                        <defs>
+                            <linearGradient id="linearGrad" gradientTransform="rotate(90)">
+                                <stop offset="0%" stop-color="orange" />
+                                <stop offset="100%" stop-color="red" />
+                            </linearGradient>
+                            <linearGradient id="linearGrad2" gradientTransform="rotate(90)">
+                                <stop offset="0%" stop-color="red" />
+                                <stop offset="100%" stop-color="orange" />
+                            </linearGradient>
+                        </defs>
+                        <g class="boxesHere"></g>
+                    </svg>
+                    <p id="noCameraMessage"
+                        class="absolute text-white text-center p-4 hidden bg-black bg-opacity-70 rounded-md">
                         Camera not available or access denied. Please allow camera permissions.
                     </p>
                     <button id="cameraToggleButton" class="button-overlay hidden">
@@ -628,7 +681,8 @@
                 </div>
 
                 <div id="zoomControls" class="zoom-controls hidden mt-4">
-                    <label for="zoomSlider" class="text-base font-medium mb-2 text-gray-700 dark:text-gray-200">Zoom Level: <span id="zoomValue">1.0</span>x</label>
+                    <label for="zoomSlider" class="text-base font-medium mb-2 text-gray-700 dark:text-gray-200">Zoom
+                        Level: <span id="zoomValue">1.0</span>x</label>
                     <input type="range" id="zoomSlider" min="1.0" max="4.0" value="1.0" step="0.1">
                 </div>
             </div>
@@ -649,7 +703,8 @@
                 </button>
             </div>
             <div id="predictionsContent" class="predictions-content">
-                <p class="text-gray-500 dark:text-gray-200 text-sm mt-2">Upload an image or start your webcam to see detections!</p>
+                <p class="text-gray-500 dark:text-gray-200 text-sm mt-2">Upload an image or start your webcam to see
+                    detections!</p>
             </div>
         </div>
 
@@ -678,6 +733,8 @@
         const uploadedImageDisplay = $('uploadedImageDisplay');
         const uploadedImagePreviewContainer = $('uploadedImagePreviewContainer');
         const overlayCanvas = $('overlayCanvas');
+        const overlaySVG = $('overlaySVG');
+        const overlaySVGWebcam = $('overlaySVGWebcam');
         const zoomSlider = $('zoomSlider');
         const zoomValueSpan = $('zoomValue');
         const noCameraMessage = $('noCameraMessage');
@@ -769,7 +826,7 @@
 
         async function initModel() {
             try {
-                session = await ort.InferenceSession.create('./best.onnx', {
+                session = await ort.InferenceSession.create('./best_medical_instruments.onnx', {
                     executionProviders: ['wasm']
                 });
                 showMessage('Model ready!', 'success');
@@ -807,7 +864,7 @@
                 const current = sortedIndices.shift();
                 indices.push(current);
                 const currentBox = boxes[current];
-                
+
                 // Filter out boxes with high IOU
                 const remainingIndices = [];
                 for (const idx of sortedIndices) {
@@ -846,7 +903,7 @@
             return interArea / (box1Area + box2Area - interArea);
         }
 
-        async function predict(src, forceSidebarOpen = true) {
+        async function predict(src, forceSidebarOpen = true, webCamFeed = false) {
             if (!session) {
                 showMessage('Model not ready', 'info');
                 return;
@@ -858,7 +915,7 @@
                 const data = preprocess(src);
                 const tensor = new ort.Tensor('float32', data, [1, 3, img_size, img_size]);
                 const outMap = await session.run({ [MODEL_INPUT_NAME]: tensor });
-                
+
                 // --- FIX: Correctly parse the YOLOv8 ONNX output tensor ---
                 const outputTensor = outMap[Object.keys(outMap)[0]];
                 const output = Array.from(outputTensor.data);
@@ -872,6 +929,8 @@
                 const num_features = dims[1]; // 4 + classes.length (e.g., 4 + 5 = 9)
                 const num_detections = dims[2]; // Total number of anchor boxes/predictions
 
+                console.log(num_features);
+                console.log(num_detections);
                 const boxes = [];
                 const scores = [];
                 const classIds = [];
@@ -898,18 +957,16 @@
                     // 2. Apply confidence threshold
                     if (maxClassScore >= conf_thres) {
                         // 3. Get the bounding box coordinates (x, y, w, h) for detection 'i'
-                        const x = output[0 * num_detections + i]; 
-                        const y = output[1 * num_detections + i]; 
-                        const w = output[2 * num_detections + i]; 
-                        const h = output[3 * num_detections + i]; 
+                        const x = output[0 * num_detections + i];
+                        const y = output[1 * num_detections + i];
+                        const w = output[2 * num_detections + i];
+                        const h = output[3 * num_detections + i];
 
                         boxes.push([x, y, w, h]);
                         scores.push(maxClassScore);
                         classIds.push(classId);
                     }
                 }
-                // --- END FIX ---
-
 
                 // Apply NMS
                 const indices = nonMaxSuppression(boxes, scores, iou_thres);
@@ -919,7 +976,9 @@
                     box: boxes[idx]
                 }));
 
-                displayResults(results, src);
+                console.log(results);
+
+                displayResults(results, src, webCamFeed);
                 showPredictionsSidebar(forceSidebarOpen);
             } catch (e) {
                 showMessage('Prediction failed: ' + e.message, 'error');
@@ -928,11 +987,11 @@
             }
         }
 
-        function displayResults(results, src) {
+        function displayResults(results, src, webCamFeed = false) {
             predictionsContent.innerHTML = '';
             const canvas = overlayCanvas;
             const ctx = canvas.getContext('2d');
-            
+
             // Use the image/video's true dimensions for the canvas to maintain aspect ratio for drawing
             const displayWidth = src.naturalWidth || src.videoWidth || src.width;
             const displayHeight = src.naturalHeight || src.videoHeight || src.height;
@@ -944,9 +1003,15 @@
             const scaleX = canvas.width / 640;
             const scaleY = canvas.height / 640;
 
+            // which svg are we drawing to?
+            let svgWithBoxes = webCamFeed ? overlaySVGWebcam : overlaySVG;
+            svgWithBoxes.querySelector('.boxesHere').innerHTML = '';
+            svgWithBoxes.width = displayWidth;
+            svgWithBoxes.height = displayHeight;
+            svgWithBoxes.setAttribute('viewBox', `0 0 ${displayWidth} ${displayHeight}`);
             results.forEach((r, i) => {
                 const [x_center, y_center, w, h] = r.box;
-                
+
                 // Scale coordinates
                 const scaledW = w * scaleX;
                 const scaledH = h * scaleY;
@@ -957,17 +1022,18 @@
                 const x_min = scaledX_center - scaledW / 2;
                 const y_min = scaledY_center - scaledH / 2;
 
-                // Draw bounding box
-                ctx.strokeStyle = 'lime';
-                ctx.lineWidth = 12;
-                ctx.strokeRect(x_min, y_min, scaledW, scaledH);
-                
-                // Draw label
-                ctx.fillStyle = 'lime';
-                ctx.font = '150px Inter';
-                // Confidence score is already a float between 0 and 1 (from the fix)
-                const label = `${r.class} (${(r.confidence * 100).toFixed(1)}%)`; 
-                ctx.fillText(label, x_min, y_min > 50 ? y_min - 5 : y_min + 20);
+                const averageDimension = (canvas.width + canvas.height) / 2;
+                const proportionalFontSize = Math.floor(averageDimension / 50);
+                const fontSize = Math.max(14, proportionalFontSize);
+                // Confidence score is already a float between 0 and 1
+                const label = `${r.class} (${(r.confidence * 100).toFixed(1)}%)`;
+
+                let rect = `<rect x="${x_min}" y="${y_min}" height="${scaledH}" width="${scaledW}" fill="none" stroke="url('#linearGrad')" stroke-width="${fontSize / 3}" />`;
+                let rectLabel = `<rect x="${x_min}" y="${y_min - fontSize}" height="${fontSize}" width="${scaledW}" fill="url('#linearGrad2')" stroke="url('#linearGrad2')" stroke-width="${fontSize / 3}" />`;
+                let text = `<text font-family="Inter" font-size="${fontSize}" x="${x_min}" y="${y_min - (fontSize/5)}" teextLength="${scaledW}" lengthAdjust="spacingAndGlyphs" fill="#fff">${label}</text>`;
+                svgWithBoxes.querySelector('.boxesHere').innerHTML += rect;
+                svgWithBoxes.querySelector('.boxesHere').innerHTML += rectLabel;
+                svgWithBoxes.querySelector('.boxesHere').innerHTML += text;
 
                 // Sidebar item
                 const predictionItem = document.createElement('div');
@@ -1112,7 +1178,7 @@
                     const sHeight = cameraFeed.videoHeight / currentZoom;
                     cvs.getContext('2d').drawImage(cameraFeed, sx, sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
                     const img = new Image();
-                    img.onload = () => predict(img, false);
+                    img.onload = () => predict(img, false, true);
                     img.src = cvs.toDataURL('image/jpeg');
                 }
             }, 100);
@@ -1147,7 +1213,7 @@
             webcamToggle.classList.remove('active');
             uploadArea.style.display = 'none';
             // webcamArea needs to be block for video elements to work correctly
-            webcamArea.style.display = 'none'; 
+            webcamArea.style.display = 'none';
             imagePreview.style.display = 'none';
             uploadedImagePreviewContainer.classList.add('hidden');
             overlayCanvas.getContext('2d').clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
@@ -1169,7 +1235,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             // Ensure dark mode is set by default (as per the original file)
-            document.documentElement.classList.add('dark'); 
+            document.documentElement.classList.add('dark');
             initModel();
             uploadToggle.addEventListener('click', () => setMode('upload'));
             webcamToggle.addEventListener('click', () => setMode('webcam'));
@@ -1263,4 +1329,5 @@
         }
     </script>
 </body>
+
 </html>
