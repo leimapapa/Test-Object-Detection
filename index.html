@@ -545,6 +545,9 @@
             background-color: var(--message-info-bg);
             color: var(--message-info-color);
         }
+        .boxesHere, .box, .boxLabelBg, .boxLabel {
+            transition: 100ms;
+        }
 
         @media (min-width: 768px) {
             body {
@@ -646,7 +649,11 @@
                             <stop offset="100%" stop-color="orange" />
                         </linearGradient>
                     </defs>
-                    <g class="boxesHere"></g>
+                    <g class="boxesHere">
+                        <rect class="box" x="-10" y="-10" height="0" width="0" fill="none" stroke="url('#linearGrad')" stroke-width="0"></rect>
+                        <rect class="boxLabelBg" x="-10" y="-10" height="0" width="0" fill="url('#linearGrad2')" stroke="url('#wlinearGrad2')" stroke-width="0"></rect>
+                        <text class="boxLabel" font-family="Inter" font-size="0" x="-10" y="-10" lengthAdjust="spacingAndGlyphs" fill="#fff"></text>
+                    </g>
                 </svg>
             </div>
 
@@ -657,16 +664,20 @@
                     <canvas id="overlayCanvasWebcam" class="absolute"></canvas>
                     <svg id="overlaySVGWebcam" class="absolute">
                         <defs>
-                            <linearGradient id="linearGrad" gradientTransform="rotate(90)">
+                            <linearGradient id="wlinearGrad" gradientTransform="rotate(90)">
                                 <stop offset="0%" stop-color="orange" />
                                 <stop offset="100%" stop-color="red" />
                             </linearGradient>
-                            <linearGradient id="linearGrad2" gradientTransform="rotate(90)">
+                            <linearGradient id="wlinearGrad2" gradientTransform="rotate(90)">
                                 <stop offset="0%" stop-color="red" />
                                 <stop offset="100%" stop-color="orange" />
                             </linearGradient>
                         </defs>
-                        <g class="boxesHere"></g>
+                        <g class="boxesHere">
+                            <rect class="box" x="-10" y="-10" height="0" width="0" fill="none" stroke="url('#wlinearGrad')" stroke-width="0"></rect>
+                            <rect class="boxLabelBg" x="-10" y="-10" height="0" width="0" fill="url('#wlinearGrad2')" stroke="url('#wlinearGrad2')" stroke-width="0"></rect>
+                            <text class="boxLabel" font-family="Inter" font-size="0" x="-10" y="-10" lengthAdjust="spacingAndGlyphs" fill="#fff"></text>
+                        </g>
                     </svg>
                     <p id="noCameraMessage"
                         class="absolute text-white text-center p-4 hidden bg-black bg-opacity-70 rounded-md">
@@ -929,8 +940,8 @@
                 const num_features = dims[1]; // 4 + classes.length (e.g., 4 + 5 = 9)
                 const num_detections = dims[2]; // Total number of anchor boxes/predictions
 
-                console.log(num_features);
-                console.log(num_detections);
+                // console.log(num_features);
+                // console.log(num_detections);
                 const boxes = [];
                 const scores = [];
                 const classIds = [];
@@ -976,7 +987,7 @@
                     box: boxes[idx]
                 }));
 
-                console.log(results);
+                // console.log(results);
 
                 displayResults(results, src, webCamFeed);
                 showPredictionsSidebar(forceSidebarOpen);
@@ -1005,7 +1016,12 @@
 
             // which svg are we drawing to?
             let svgWithBoxes = webCamFeed ? overlaySVGWebcam : overlaySVG;
-            svgWithBoxes.querySelector('.boxesHere').innerHTML = '';
+            let gradPrefix = webCamFeed ? 'w' : '';
+            // console.log(svgWithBoxes);
+            const box = svgWithBoxes.querySelector('.boxesHere .box');
+            const boxLabelBg = svgWithBoxes.querySelector('.boxesHere .boxLabelBg');
+            const boxLabel = svgWithBoxes.querySelector('.boxesHere .boxLabel');
+            // svgWithBoxes.querySelector('.boxesHere').innerHTML = '';
             svgWithBoxes.width = displayWidth;
             svgWithBoxes.height = displayHeight;
             svgWithBoxes.setAttribute('viewBox', `0 0 ${displayWidth} ${displayHeight}`);
@@ -1028,12 +1044,30 @@
                 // Confidence score is already a float between 0 and 1
                 const label = `${r.class} (${(r.confidence * 100).toFixed(1)}%)`;
 
-                let rect = `<rect x="${x_min}" y="${y_min}" height="${scaledH}" width="${scaledW}" fill="none" stroke="url('#linearGrad')" stroke-width="${fontSize / 3}" />`;
-                let rectLabel = `<rect x="${x_min}" y="${y_min - fontSize}" height="${fontSize}" width="${scaledW}" fill="url('#linearGrad2')" stroke="url('#linearGrad2')" stroke-width="${fontSize / 3}" />`;
-                let text = `<text font-family="Inter" font-size="${fontSize}" x="${x_min}" y="${y_min - (fontSize/5)}" teextLength="${scaledW}" lengthAdjust="spacingAndGlyphs" fill="#fff">${label}</text>`;
-                svgWithBoxes.querySelector('.boxesHere').innerHTML += rect;
-                svgWithBoxes.querySelector('.boxesHere').innerHTML += rectLabel;
-                svgWithBoxes.querySelector('.boxesHere').innerHTML += text;
+                // let rect = `<rect x="${x_min}" y="${y_min}" height="${scaledH}" width="${scaledW}" fill="none" stroke="url('#${gradPrefix}linearGrad')" stroke-width="${fontSize / 3}" />`;
+                // let rectLabel = `<rect x="${x_min}" y="${y_min - fontSize}" height="${fontSize}" width="${scaledW}" fill="url('#${gradPrefix}linearGrad2')" stroke="url('#${gradPrefix}linearGrad2')" stroke-width="${fontSize / 3}" />`;
+                // let text = `<text font-family="Inter" font-size="${fontSize}" x="${x_min}" y="${y_min - (fontSize/5)}" teextLength="${scaledW}" lengthAdjust="spacingAndGlyphs" fill="#fff">${label}</text>`;
+                // const box = svgWithBoxes.querySelector('.boxesHere .box').innerHTML += rect;
+                
+                box.setAttribute('x', x_min);
+                box.setAttribute('y', y_min);
+                box.setAttribute('height', scaledH);
+                box.setAttribute('width', scaledW);
+                box.setAttribute('stroke-width', fontSize / 3);
+                // const boxLabel = svgWithBoxes.querySelector('.boxesHere .boxLabelBg').innerHTML += rectLabel;
+                
+                boxLabelBg.setAttribute('x', x_min);
+                boxLabelBg.setAttribute('y', y_min - fontSize);
+                boxLabelBg.setAttribute('height', fontSize);
+                boxLabelBg.setAttribute('width', scaledW);
+                boxLabelBg.setAttribute('stroke-width', fontSize / 3);
+
+                boxLabel.setAttribute('x', x_min);
+                boxLabel.setAttribute('y', y_min - (fontSize/5));
+                boxLabel.textContent = label;
+                boxLabel.setAttribute('font-size', fontSize);
+
+                // svgWithBoxes.querySelector('.boxesHere .boxLabel').innerHTML += text;
 
                 // Sidebar item
                 const predictionItem = document.createElement('div');
@@ -1159,7 +1193,7 @@
                 imagePreview.style.display = 'block';
                 cameraFeed.style.display = 'none';
                 isSidebarManuallyClosed = false;
-                predict(imgForPrediction, true);
+                predict(imgForPrediction, true, true);
                 showMessage('Photo captured! Displaying detections.', 'info');
             };
             imgForPrediction.src = cvs.toDataURL('image/jpeg');
@@ -1181,7 +1215,7 @@
                     img.onload = () => predict(img, false, true);
                     img.src = cvs.toDataURL('image/jpeg');
                 }
-            }, 100);
+            }, 50);
             continuousPredictionActive = true;
             cameraFeed.style.display = 'block';
             imagePreview.style.display = 'none';
@@ -1331,4 +1365,3 @@
 </body>
 
 </html>
-
